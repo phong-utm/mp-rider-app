@@ -34,7 +34,9 @@ function getRouteData(route: string): Promise<RouteData> {
 function App() {
   const [route, setRoute] = useState<RouteData | undefined>(undefined);
   const [position, setPosition] = useState(undefined);
-  const [estimatedArrival, setEstimatedArrival] = useState(undefined);
+  const [estimatedArrival, setEstimatedArrival] = useState<
+    Array<{ stop: string; seconds: number }> | undefined
+  >(undefined);
 
   useEffect(() => {
     getRouteData("T100").then(setRoute);
@@ -58,13 +60,15 @@ function App() {
       <div style={{ position: "relative", flexGrow: 1 }}>
         <MapContainer route={route} position={position} />
       </div>
-      {estimatedArrival && <EtaPanel estimatedArrival={estimatedArrival} />}
+      {estimatedArrival && estimatedArrival.length > 0 && (
+        <EtaPanel estimatedArrival={estimatedArrival} />
+      )}
     </div>
   );
 }
 
 function EtaPanel(props: {
-  estimatedArrival?: Array<{ stop: string; minutes: number }>;
+  estimatedArrival?: Array<{ stop: string; seconds: number }>;
 }) {
   return (
     <div
@@ -73,15 +77,25 @@ function EtaPanel(props: {
     >
       <div className="panel">
         <p className="panel-heading">Estimated Arrival Times</p>
-        {props.estimatedArrival?.map(({ stop, minutes }) => (
+        {props.estimatedArrival?.map(({ stop, seconds }) => (
           <p className="panel-block is-justify-content-space-between">
             {stop}
-            <span className="is-right">{minutes} mins</span>
+            <span className="is-right">{formatETA(seconds)}</span>
           </p>
         ))}
       </div>
     </div>
   );
+}
+
+function formatETA(seconds: number) {
+  if (seconds < 15) {
+    return "Now";
+  } else if (seconds < 60) {
+    return "< 1 min";
+  }
+  const mins = Math.round(seconds / 60);
+  return mins === 1 ? "1 min" : `${mins} mins`;
 }
 
 export default App;
