@@ -9,7 +9,7 @@ const apiBaseURL = process.env.REACT_APP_API_BASE_URL;
 function getRouteData(route: string): Promise<RouteData> {
   return fetch(`${apiBaseURL}/routes/${route}`)
     .then((res) => res.json())
-    .then(({ origin, destination, links }) => {
+    .then(({ origin, destination, links, centerLocation }) => {
       const path = links.reduce((tmp: Coordinates[], link: any) => {
         const points = link.points.map(({ lat, lng }: any) => ({ lat, lng }));
         return [...tmp, ...points];
@@ -19,14 +19,14 @@ function getRouteData(route: string): Promise<RouteData> {
         return { lat, lng };
       });
 
-      const midPoint = path[Math.floor(path.length / 2)];
+      // const midPoint = path[Math.floor(path.length / 2)];
 
       return {
         origin,
         destination,
         path,
         stops,
-        initialCenter: midPoint,
+        initialCenter: centerLocation, // midPoint,
       };
     });
 }
@@ -39,7 +39,7 @@ function App() {
   >(undefined);
 
   useEffect(() => {
-    getRouteData("T100").then(setRoute);
+    getRouteData("R").then(setRoute);
 
     const ws = new WebSocket(webSocketURL!);
     ws.onmessage = (evt) => {
